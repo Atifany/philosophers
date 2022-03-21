@@ -1,0 +1,2 @@
+# philosophers
+school project
