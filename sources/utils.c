@@ -12,43 +12,42 @@
 
 #include "../philo.h"
 
-static ULL	ft_strlen(char *str)
+size_t	_ft_strlen(const char *s)
 {
-	ULL	i;
+	size_t	i;
 
-	if (!str)
+	if (!s)
 		return (0);
 	i = 0;
-	while (str[i])
+	while (*(s++))
 		i++;
 	return (i);
 }
 
-static ULL	ft_pow(int base, int pow)
+static int	pow(int base, int power)
 {
-	int	base_cpy;
+	int	base_save;
 
-	base_cpy = base;
-	if (base <= 1)
-		return (base);
-	if (pow == 0)
+	base_save = base;
+	if (power == 0)
 		return (1);
-	while (--pow)
-		base *= base_cpy;
+	while (--power > 0)
+		base *= base_save;
 	return (base);
 }
 
-ULL	ft_atoi(char *n)
+long long	ft_atoi(char *str)
 {
-	int	ans;
+	long long	i;
+	long long	integer;
+	long long	ans_len;
 
-	ans = 0;
-	if (!n)
-		return (ans);
-	while (*n)
-	{
-		ans += (*n - '0') * ft_pow(10, ft_strlen(n) - 1);
-		n++;
-	}
-	return (ans);
+	i = _ft_strlen(str);
+	ans_len = 0;
+	if (*str == '0')
+		return (0);
+	integer = 0;
+	while (i-- > 0)
+		integer += pow(10, i) * (str[ans_len++] - '0');
+	return (integer);
 }

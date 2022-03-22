@@ -29,16 +29,23 @@
 # define FALSE 0
 
 // Global structure
+typedef struct s_philo
+{
+	char		feed_state[1];
+	long long	last_meal;
+}	t_philo;
+
 typedef struct s_data
 {
 	int				number_of_philosophers;
-	ULL				time_to_die;
-	ULL				time_to_eat;
-	ULL				time_to_sleep;
+	long long		time_to_die;
+	long long		time_to_eat;
+	long long		time_to_sleep;
 	ULL				number_of_times_each_philosopher_must_eat;
 	long long		sim_start;
-	char			*is_dead;
+	t_philo			*philo;
 	pthread_mutex_t	*forks;
+	pthread_mutex_t	log_queue;
 }	t_data;
 
 typedef struct s_point
@@ -48,7 +55,7 @@ typedef struct s_point
 }	t_point;
 
 // Utils
-ULL	ft_atoi(char *n);
+long long	ft_atoi(char *n);
 
 // Colors
 # define RED "\e[0;31m"
