@@ -38,8 +38,7 @@ typedef struct s_data
 	ULL				number_of_times_each_philosopher_must_eat;
 	long long		sim_start;
 	char			*is_dead;
-	char			*forks;
-	pthread_mutex_t	lock;
+	pthread_mutex_t	*forks;
 }	t_data;
 
 typedef struct s_point

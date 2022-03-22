@@ -23,22 +23,41 @@ static long long	cur_time(t_data *data)
 	return (milliseconds);
 }
 
-static void	*philosopher(void *arg)
+static void	*count_to_death(void *arg)
 {
-	int			left_fork;
-	int			right_fork;
-	char		is_thinking;
 	int			my_num;
-	long long	last_meal;
 	t_point		arg_tmp;
 	t_data		*data;
 
 	arg_tmp = (*(t_point *)arg);
 	data = arg_tmp.data;
+	my_num = arg_tmp.num - 1;
+	usleep(data->time_to_die);
+	if (data->is_dead[my_num] != 2)
+	{
+		printf("%s%lld: %d is dead%s\n", RED, cur_time(data), my_num + 1, NC);
+		memset(data->is_dead + my_num, 1, 1);
+	}
+	return (NULL);
+}
+
+static void	*philosopher(void *arg)
+{
+	int			left_fork;
+	int			right_fork;
+	int			my_num;
+	char		first_entrance;
+	long long	last_meal;
+	t_point		arg_tmp;
+	t_data		*data;
+	pthread_t	timer;
+
+	first_entrance = TRUE;
+	arg_tmp = (*(t_point *)arg);
+	data = arg_tmp.data;
 	my_num = arg_tmp.num + 1;
 	//printf("%s%lld: My number is %d%s\n", MAG, cur_time(data), my_num, NC);
 	last_meal = cur_time(data);
-	is_thinking = FALSE;
 	left_fork = my_num - 1;
 	if (my_num == data->number_of_philosophers)
 		right_fork = 0;
@@ -46,30 +65,18 @@ static void	*philosopher(void *arg)
 		right_fork = my_num;
 	while (TRUE)
 	{
-		printf("%s%d forks are: |%d:%d|%d:%d|%s\n", MAG, my_num,
-			   left_fork, (data->forks)[left_fork], right_fork, (data->forks)[right_fork], NC);
-		while (!(data->forks)[left_fork] || !(data->forks)[right_fork])
-		{
-			if ((ULL)(cur_time(data) - last_meal) > data->time_to_die)
-			{
-				printf("%s%lld: %d is dead%s\n", RED, cur_time(data), my_num, NC);
-				memset(data->is_dead, 1, 1);
-				return (NULL);
-			}
-			if (!is_thinking)
-				printf("%s%lld: %d is thinking%s\n", CYN, cur_time(data), my_num, NC);
-			is_thinking = TRUE;
-		}
-		is_thinking = FALSE;
+		if (!first_entrance)
+			printf("%s%lld: %d is thinking%s\n", CYN, cur_time(data), my_num, NC);
+		first_entrance = FALSE;
+		pthread_mutex_lock(&(data->forks[left_fork]));
+		pthread_mutex_lock(&(data->forks[right_fork]));
+		if (data->is_dead[my_num] != 1)
+			memset(data->is_dead + my_num, 2, 1);
 		printf("%s%lld: %d is eating%s\n", CYN, cur_time(data), my_num, NC);
-		pthread_mutex_lock(&(data->lock));
-		memset(data->forks + left_fork, 0, 1);
-		memset(data->forks + right_fork, 0, 1);
 		usleep(data->time_to_eat);
-		memset(data->forks + left_fork, 1, 1);
-		memset(data->forks + right_fork, 1, 1);
-		pthread_mutex_unlock(&(data->lock));
-		last_meal = cur_time(data);
+		pthread_mutex_unlock(&(data->forks[left_fork]));
+		pthread_mutex_unlock(&(data->forks[right_fork]));
+		pthread_create(&timer, NULL, count_to_death, &(t_point){my_num, data});
 		printf("%s%lld: %d is sleeping%s\n", CYN, cur_time(data), my_num, NC);
 		usleep(data->time_to_sleep);
 	}
@@ -89,18 +96,16 @@ int	main(int argc, char **argv)
 		return (0);
 	}
 
-	pthread_mutex_init(&data.lock, NULL);
-	data.is_dead = malloc(1);
-	memset(data.is_dead, 0, 1);
+	data.is_dead = malloc(data.number_of_philosophers);
+	memset(data.is_dead, 0, data.number_of_philosophers);
 	data.sim_start = cur_time(NULL);
 	data.number_of_philosophers = ft_atoi(argv[1]);
-	data.time_to_die = ft_atoi(argv[2]);
-	data.time_to_eat = ft_atoi(argv[3]);
-	data.time_to_sleep = ft_atoi(argv[4]);
-	data.forks = (char *)malloc(sizeof(char) * data.number_of_philosophers);
+	data.time_to_die = ft_atoi(argv[2]) * 1000;
+	data.time_to_eat = ft_atoi(argv[3]) * 1000;
+	data.time_to_sleep = ft_atoi(argv[4]) * 1000;
+	data.forks = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t) * data.number_of_philosophers);
 	if (argc == 6)
 		data.number_of_times_each_philosopher_must_eat = ft_atoi(argv[5]);
-	memset(data.forks, 1, data.number_of_philosophers);
 	//printf("%sInit fork number %d with %d%s\n", CYN, 0, data.forks[0], NC);
 	//printf("%sInit fork number %d with %d%s\n", CYN, 1, data.forks[1], NC);
 	//printf("%sInit fork number %d with %d%s\n", CYN, 2, data.forks[2], NC);
@@ -111,16 +116,27 @@ int	main(int argc, char **argv)
 	i = 0;
 	while (i < data.number_of_philosophers)
 	{
+		pthread_mutex_init(&(data.forks[i]), NULL);
+		i++;
+	}
+	i = 0;
+	while (i < data.number_of_philosophers)
+	{
 		pthread_create(&(thread_ids[i]), NULL, philosopher, &(t_point){i, &data});
 		usleep(50);
 		i++;
 	}
 	printf("started every philosopher!\n");
-	while (!*(data.is_dead))
+	i = 0;
+	while (data.is_dead[i] != 1)
 	{
-		usleep(1);
+		i++;
+		if (i == data.number_of_philosophers)
+			i = 0;
+		usleep(10);
 	}
 	free(thread_ids);
 	free(data.is_dead);
+	free(data.forks);
 	return (0);
 }
