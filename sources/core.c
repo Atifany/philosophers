@@ -51,12 +51,12 @@ void	*count_to_death(void *arg)
 		//usleep(data->time_to_die);
 		usleep(1000);
 		while (cur_time(data) - data->philo[my_num].last_meal < data->time_to_die / 1000
-			&& cur_time(data) != data->philo[my_num].last_meal)
+			&& cur_time(data) <= data->philo[my_num].last_meal)
 			usleep(1000);
 		//printf("%llu|%llu|%llu\n", cur_time(data), data->philo[my_num].last_meal, data->time_to_die / 1000);
-		printf("%s%llu: %d is waiting unlock to check death!%s\n", MAG, cur_time(data), my_num + 1, NC);
+		//printf("%s%llu: %d is waiting unlock to check death!%s\n", MAG, cur_time(data), my_num + 1, NC);
 		pthread_mutex_lock(&data->philo[my_num].timer);
-		if (check_if_someone_died(*data) && printf("%d finished cause someone died!\n", my_num + 1))
+		if (check_if_someone_died(*data))
 		{
 			pthread_mutex_unlock(&data->philo[my_num].timer);
 			return (NULL);
@@ -64,25 +64,20 @@ void	*count_to_death(void *arg)
 		if (cur_time(data) - data->philo[my_num].last_meal >= data->time_to_die / 1000 &&
 			data->philo[my_num].feed_state[0] == 0)
 		{
-			printf("%d is definitely going to die!\n", my_num + 1);
-			if (check_if_someone_died(*data) && printf("%d died but not logged!\n", my_num + 1))
+			//printf("%d is definitely going to die!\n", my_num + 1);
+			if (check_if_someone_died(*data))
 			{
 				pthread_mutex_unlock(&data->philo[my_num].timer);
 				return (NULL);
 			}
-			pthread_mutex_lock(&data->log_queue);
-			if (check_if_someone_died(*data))
-			{
-				pthread_mutex_unlock(&data->log_queue);
-				return (FALSE);
-			}
+			//pthread_mutex_lock(&data->log_queue);
 			memset(data->philo[my_num].feed_state, 1, 1);
 			printf("%s%lld: %d is dead%s\n", RED, cur_time(data), my_num + 1, NC);
-			pthread_mutex_unlock(&data->log_queue);
+			//pthread_mutex_unlock(&data->log_queue);
 			pthread_mutex_unlock(&data->philo[my_num].timer);
 			return (NULL);
 		}
-		printf("%d finished this timer safely!\n", my_num + 1);
+		//printf("%d finished this timer safely!\n", my_num + 1);
 		pthread_mutex_unlock(&data->philo[my_num].timer);
 	}
 }
