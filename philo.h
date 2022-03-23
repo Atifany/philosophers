@@ -31,8 +31,9 @@
 // Global structure
 typedef struct s_philo
 {
-	char		feed_state[1];
-	long long	last_meal;
+	pthread_mutex_t	timer;
+	char			feed_state[1];
+	long long		last_meal;
 }	t_philo;
 
 typedef struct s_data
@@ -53,6 +54,20 @@ typedef struct s_point
 	int			num;
 	t_data		*data;
 }	t_point;
+
+// Philosopher
+void		init_philo(t_data *data, char **args, int argc);
+void		*philosopher(void *arg);
+
+// Philosopher actions
+char		_think(t_data *data, int my_num);
+char		_eat(t_data *data, int my_num);
+char		_sleep(t_data *data, int my_num);
+
+// Philosopher utils
+long long	cur_time(t_data *data);
+char		check_if_someone_died(t_data data);
+void		*count_to_death(void *arg);
 
 // Utils
 long long	ft_atoi(char *n);
