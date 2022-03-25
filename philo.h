@@ -38,6 +38,7 @@ typedef struct s_philo
 
 typedef struct s_data
 {
+	char			dead;
 	int				number_of_philosophers;
 	long long		time_to_die;
 	long long		time_to_eat;
@@ -47,6 +48,7 @@ typedef struct s_data
 	t_philo			*philo;
 	pthread_mutex_t	*forks;
 	pthread_mutex_t	check_dead;
+	pthread_mutex_t	get_time;
 }	t_data;
 
 typedef struct s_point

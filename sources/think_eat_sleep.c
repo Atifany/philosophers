@@ -15,9 +15,11 @@
 char	_think(t_data *data, int my_num)
 {
 	pthread_mutex_lock(&data->check_dead);
-	if (check_if_someone_died(data))
+	if (data->dead)
 	{
+		printf("%d check\n", my_num + 1);
 		pthread_mutex_unlock(&data->check_dead);
+		printf("%d saved ending while think\n", my_num + 1);
 		return (FALSE);
 	}
 	printf("%s%lld: %d is thinking%s\n", CYN, cur_time(data), my_num, NC);
@@ -33,11 +35,13 @@ char	_eat(t_data *data, int my_num, int left_fork, int right_fork)
 	pthread_mutex_lock(&(data->forks[right_fork]));
 	pthread_mutex_lock(&(data->philo[my_num - 1].timer));
 	pthread_mutex_lock(&data->check_dead);
-	if (check_if_someone_died(data))
+	if (data->dead)
 	{
+		printf("%d check\n", my_num + 1);
 		unlock(&(data->forks[left_fork]),
 			   &(data->forks[right_fork]), &(data->philo[my_num - 1].timer));
 		pthread_mutex_unlock(&data->check_dead);
+		printf("%d saved ending before eat\n", my_num + 1);
 		return (FALSE);
 	}
 	if (data->philo[my_num - 1].feed_state[0] != 1)
@@ -49,11 +53,13 @@ char	_eat(t_data *data, int my_num, int left_fork, int right_fork)
 	while (cur_time(data) < timestamp + (data->time_to_eat / 1000))
 	{
 		pthread_mutex_lock(&data->check_dead);
-		if (check_if_someone_died(data))
+		if (data->dead)
 		{
+			printf("%d check\n", my_num + 1);
 			unlock(&(data->forks[left_fork]),
 				   &(data->forks[right_fork]), &(data->philo[my_num - 1].timer));
 			pthread_mutex_unlock(&data->check_dead);
+			printf("%d saved ending while eat\n", my_num + 1);
 			return (FALSE);
 		}
 		pthread_mutex_unlock(&data->check_dead);
@@ -70,10 +76,12 @@ char	_sleep(t_data *data, int my_num, int left_fork, int right_fork)
 	long long	timestamp;
 
 	pthread_mutex_lock(&data->check_dead);
-	if (check_if_someone_died(data))
+	if (data->dead)
 	{
+		printf("%d check\n", my_num + 1);
 		pthread_mutex_unlock(&data->check_dead);
 		unlock(&(data->forks[left_fork]), &(data->forks[right_fork]), NULL);
+		printf("%d saved ending before sleep\n", my_num + 1);
 		return (FALSE);
 	}
 	printf("%s%lld: %d is sleeping%s\n", CYN, cur_time(data), my_num, NC);
@@ -84,9 +92,11 @@ char	_sleep(t_data *data, int my_num, int left_fork, int right_fork)
 	while (cur_time(data) < timestamp + (data->time_to_sleep / 1000))
 	{
 		pthread_mutex_lock(&data->check_dead);
-		if (check_if_someone_died(data))
+		if (data->dead)
 		{
+			printf("%d check\n", my_num + 1);
 			pthread_mutex_unlock(&data->check_dead);
+			printf("%d saved ending while sleep\n", my_num + 1);
 			return (FALSE);
 		}
 		pthread_mutex_unlock(&data->check_dead);

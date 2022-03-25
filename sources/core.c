@@ -16,28 +16,15 @@ long long	cur_time(t_data *data)
 {
 	struct timeval	te;
 
+	if (data)
+		pthread_mutex_lock(&data->get_time);
 	gettimeofday(&te, NULL);
 	long long milliseconds = te. tv_sec*1000LL + te. tv_usec/1000;
 	if (data)
+		pthread_mutex_unlock(&data->get_time);
+	if (data)
 		return (milliseconds - data->sim_start);
 	return (milliseconds);
-}
-
-char	check_if_someone_died(t_data *data)
-{
-	int	i;
-
-	//pthread_mutex_lock(&data->check_dead);
-	i = 0;
-	while (data->philo[i].feed_state[0] != 1 && i < data->number_of_philosophers)
-		i++;
-	if (i != data->number_of_philosophers)
-	{
-		//pthread_mutex_unlock(&data->check_dead);
-		return (TRUE);
-	}
-	//pthread_mutex_unlock(&data->check_dead);
-	return (FALSE);
 }
 
 void	*count_to_death(void *arg)
@@ -64,7 +51,7 @@ void	*count_to_death(void *arg)
 			usleep(1000);
 		pthread_mutex_lock(&(data->philo[my_num].timer));
 		pthread_mutex_lock(&data->check_dead);
-		if (check_if_someone_died(data))
+		if (data->dead)
 		{
 			pthread_mutex_unlock(&data->check_dead);
 			unlock(&(data->forks[left_fork]),
@@ -75,15 +62,18 @@ void	*count_to_death(void *arg)
 		if (cur_time(data) - data->philo[my_num].last_meal >= data->time_to_die / 1000 &&
 			data->philo[my_num].feed_state[0] == 0)
 		{
+			printf("%d lols\n", my_num + 1);
 			pthread_mutex_lock(&data->check_dead);
-			if (check_if_someone_died(data))
+			printf("%d keks\n", my_num + 1);
+			if (data->dead)
 			{
+				printf("%d good ending\n", my_num + 1);
 				pthread_mutex_unlock(&data->check_dead);
 				unlock(&(data->forks[left_fork]),
 					   &(data->forks[right_fork]), &(data->philo[my_num].timer));
 				return (NULL);
 			}
-			memset(data->philo[my_num].feed_state, 1, 1);
+			data->dead = 1;
 			printf("%s%lld: %d is dead%s\n", RED, cur_time(data), my_num + 1, NC);
 			pthread_mutex_unlock(&data->check_dead);
 			unlock(&(data->forks[left_fork]),
@@ -111,6 +101,7 @@ void	*philosopher(void *arg)
 		right_fork = 0;
 	else
 		right_fork = my_num;
+	data->philo[my_num - 1].last_meal = cur_time(data);
 	pthread_mutex_init(&data->philo[my_num - 1].timer, NULL);
 	pthread_create(&timer, NULL, count_to_death, &(t_point){my_num, data});
 	while (TRUE)
