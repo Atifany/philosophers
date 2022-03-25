@@ -51,3 +51,13 @@ long long	ft_atoi(char *str)
 		integer += pow(10, i) * (str[ans_len++] - '0');
 	return (integer);
 }
+
+void	unlock(pthread_mutex_t *lock_1, pthread_mutex_t *lock_2, pthread_mutex_t *lock_3)
+{
+	if (lock_1)
+		pthread_mutex_unlock(lock_1);
+	if (lock_2)
+		pthread_mutex_unlock(lock_2);
+	if (lock_3)
+		pthread_mutex_unlock(lock_3);
+}

@@ -46,7 +46,7 @@ typedef struct s_data
 	long long		sim_start;
 	t_philo			*philo;
 	pthread_mutex_t	*forks;
-	pthread_mutex_t	log_queue;
+	pthread_mutex_t	check_dead;
 }	t_data;
 
 typedef struct s_point
@@ -61,16 +61,17 @@ void		*philosopher(void *arg);
 
 // Philosopher actions
 char		_think(t_data *data, int my_num);
-char		_eat(t_data *data, int my_num);
-char		_sleep(t_data *data, int my_num);
+char		_eat(t_data *data, int my_num, int left_fork, int right_fork);
+char		_sleep(t_data *data, int my_num, int left_fork, int right_fork);
 
 // Philosopher utils
 long long	cur_time(t_data *data);
-char		check_if_someone_died(t_data data);
+char		check_if_someone_died(t_data *data);
 void		*count_to_death(void *arg);
 
 // Utils
 long long	ft_atoi(char *n);
+void		unlock(pthread_mutex_t *lock_1, pthread_mutex_t *lock_2, pthread_mutex_t *lock_3);
 
 // Colors
 # define RED "\e[0;31m"

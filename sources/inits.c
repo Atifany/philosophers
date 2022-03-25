@@ -16,6 +16,7 @@ static void	init_locks(t_data *data)
 {
 	int	i;
 
+	pthread_mutex_init(&data->check_dead, NULL);
 	i = 0;
 	while (i < data->number_of_philosophers)
 	{
@@ -38,13 +39,13 @@ static void	run_philosphers(t_data *data)
 		i++;
 	}
 	pthread_join(thread_ids[0], NULL);
+	free(thread_ids);
 }
 
 void	init_philo(t_data *data, char **args, int argc)
 {
 	int			i;
 
-	pthread_mutex_init(&data->log_queue, NULL);
 	data->number_of_philosophers = ft_atoi(args[1]);
 	data->time_to_die = ft_atoi(args[2]) * 1000;
 	data->time_to_eat = ft_atoi(args[3]) * 1000;

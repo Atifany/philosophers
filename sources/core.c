@@ -23,21 +23,27 @@ long long	cur_time(t_data *data)
 	return (milliseconds);
 }
 
-char	check_if_someone_died(t_data data)
+char	check_if_someone_died(t_data *data)
 {
 	int	i;
 
+	pthread_mutex_lock(&data->check_dead);
 	i = 0;
-	while (data.philo[i].feed_state[0] != 1 && i < data.number_of_philosophers)
+	while (data->philo[i].feed_state[0] != 1 && i < data->number_of_philosophers)
 		i++;
-	if (i != data.number_of_philosophers)
+	if (i != data->number_of_philosophers)
+	{
+		pthread_mutex_unlock(&data->check_dead);
 		return (TRUE);
+	}
+	pthread_mutex_unlock(&data->check_dead);
 	return (FALSE);
 }
 
 void	*count_to_death(void *arg)
 {
-	//int		i;
+	int		left_fork;
+	int		right_fork;
 	int		my_num;
 	t_point	arg_tmp;
 	t_data	*data;
@@ -45,45 +51,50 @@ void	*count_to_death(void *arg)
 	arg_tmp = (*(t_point *)arg);
 	data = arg_tmp.data;
 	my_num = arg_tmp.num - 1;
-	//printf("%s%lld: %d has started starving%s\n", YEL, cur_time(data), my_num + 1, NC);
+	left_fork = my_num;
+	if (my_num + 1 == data->number_of_philosophers)
+		right_fork = 0;
+	else
+		right_fork = my_num;
 	while (TRUE)
 	{
-		//usleep(data->time_to_die);
 		usleep(1000);
 		while (cur_time(data) - data->philo[my_num].last_meal < data->time_to_die / 1000
 			&& cur_time(data) <= data->philo[my_num].last_meal)
 			usleep(1000);
-		//printf("%llu|%llu|%llu\n", cur_time(data), data->philo[my_num].last_meal, data->time_to_die / 1000);
-		//printf("%s%llu: %d is waiting unlock to check death!%s\n", MAG, cur_time(data), my_num + 1, NC);
 		pthread_mutex_lock(&data->philo[my_num].timer);
-		if (check_if_someone_died(*data))
+		if (check_if_someone_died(data))
 		{
+			pthread_mutex_unlock(&(data->forks[left_fork]));
+			pthread_mutex_unlock(&(data->forks[right_fork]));
 			pthread_mutex_unlock(&data->philo[my_num].timer);
 			return (NULL);
 		}
 		if (cur_time(data) - data->philo[my_num].last_meal >= data->time_to_die / 1000 &&
 			data->philo[my_num].feed_state[0] == 0)
 		{
-			//printf("%d is definitely going to die!\n", my_num + 1);
-			if (check_if_someone_died(*data))
+			if (check_if_someone_died(data))
 			{
+				pthread_mutex_unlock(&(data->forks[left_fork]));
+				pthread_mutex_unlock(&(data->forks[right_fork]));
 				pthread_mutex_unlock(&data->philo[my_num].timer);
 				return (NULL);
 			}
-			//pthread_mutex_lock(&data->log_queue);
 			memset(data->philo[my_num].feed_state, 1, 1);
 			printf("%s%lld: %d is dead%s\n", RED, cur_time(data), my_num + 1, NC);
-			//pthread_mutex_unlock(&data->log_queue);
+			pthread_mutex_unlock(&(data->forks[left_fork]));
+			pthread_mutex_unlock(&(data->forks[right_fork]));
 			pthread_mutex_unlock(&data->philo[my_num].timer);
 			return (NULL);
 		}
-		//printf("%d finished this timer safely!\n", my_num + 1);
 		pthread_mutex_unlock(&data->philo[my_num].timer);
 	}
 }
 
 void	*philosopher(void *arg)
 {
+	int			left_fork;
+	int			right_fork;
 	int			my_num;
 	t_point		arg_tmp;
 	t_data		*data;
@@ -92,22 +103,27 @@ void	*philosopher(void *arg)
 	arg_tmp = (*(t_point *)arg);
 	data = arg_tmp.data;
 	my_num = arg_tmp.num + 1;
+	left_fork = my_num - 1;
+	if (my_num == data->number_of_philosophers)
+		right_fork = 0;
+	else
+		right_fork = my_num;
 	pthread_mutex_init(&data->philo[my_num - 1].timer, NULL);
 	pthread_create(&timer, NULL, count_to_death, &(t_point){my_num, data});
 	while (TRUE)
 	{
 		if (!_think(data, my_num))
 			return (NULL);
-		if (!_eat(data, my_num))
+		if (!_eat(data, my_num, left_fork, right_fork))
 			return (NULL);
-		if (!_sleep(data, my_num))
+		if (!_sleep(data, my_num, left_fork, right_fork))
 			return (NULL);
 	}
 }
 
 int	main(int argc, char **argv)
 {
-	t_data		data;
+	t_data	data;
 
 	if (argc != 5 && argc != 6)
 	{
@@ -117,14 +133,6 @@ int	main(int argc, char **argv)
 		return (0);
 	}
 	init_philo(&data, argv, argc);
-	printf("%sstarted every philosopher!\n%s", YEL, NC);
-	//while (!check_if_someone_died(data))
-	//	usleep(5000);
-	int i = 0;
-	while (i < data.number_of_philosophers &&
-		   printf("%s%d data.philo.feed_state: %d%s\n", YEL, i+1, data.philo[i].feed_state[0], NC))
-		i++;
-	usleep(data.time_to_die + 1000);
 	free(data.philo);
 	free(data.forks);
 	return (0);
