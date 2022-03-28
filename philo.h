@@ -31,19 +31,20 @@
 // Global structure
 typedef struct s_philo
 {
+	int				times_eaten;
 	pthread_mutex_t	timer;
-	char			feed_state[1];
 	long long		last_meal;
 }	t_philo;
 
 typedef struct s_data
 {
+	int				philososphers_hungry;
 	char			dead;
 	int				number_of_philosophers;
 	long long		time_to_die;
 	long long		time_to_eat;
 	long long		time_to_sleep;
-	ULL				number_of_times_each_philosopher_must_eat;
+	int				number_of_times_each_philosopher_must_eat;
 	long long		sim_start;
 	t_philo			*philo;
 	pthread_mutex_t	*forks;
@@ -67,8 +68,9 @@ char		_eat(t_data *data, int my_num, int left_fork, int right_fork);
 char		_sleep(t_data *data, int my_num, int left_fork, int right_fork);
 
 // Philosopher utils
+void		*timer_to_die(void *arg);
+void		*philo_life_cycle(void *arg, t_data *data, int my_num);
 long long	cur_time(t_data *data);
-char		check_if_someone_died(t_data *data);
 void		*count_to_death(void *arg);
 
 // Utils
