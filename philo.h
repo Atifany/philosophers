@@ -47,7 +47,7 @@ typedef struct s_data
 	long long		sim_start;
 	t_philo			*philo;
 	pthread_mutex_t	*forks;
-	pthread_mutex_t	check_dead;
+	pthread_mutex_t	log_queue;
 	pthread_mutex_t	get_time;
 }	t_data;
 

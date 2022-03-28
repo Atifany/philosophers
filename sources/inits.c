@@ -17,7 +17,7 @@ static void	init_locks(t_data *data)
 	int	i;
 
 	pthread_mutex_init(&data->get_time, NULL);
-	pthread_mutex_init(&data->check_dead, NULL);
+	pthread_mutex_init(&data->log_queue, NULL);
 	i = 0;
 	while (i < data->number_of_philosophers)
 	{
@@ -28,6 +28,7 @@ static void	init_locks(t_data *data)
 
 static void	run_philosphers(t_data *data)
 {
+	t_point		*message;
 	pthread_t	*thread_ids;
 	int			i;
 
@@ -35,16 +36,24 @@ static void	run_philosphers(t_data *data)
 	i = 0;
 	while (i < data->number_of_philosophers)
 	{
-		pthread_create(&(thread_ids[i]), NULL, philosopher, &(t_point){i, data});
-		usleep(50);
+		message = (t_point *)malloc(sizeof(t_point));
+		message->data = data;
+		message->num = i;
+		pthread_create(&(thread_ids[i]), NULL, philosopher, message);
 		i++;
 	}
-	printf("exit!\n");
-	usleep(1000);
+	printf("%sall philos are running!\nNow waiting for them to finish%s\n", YEL, NC);
+	/*usleep(1000);
 	while (!data->dead)
 		usleep(1000);
-	printf("exit!\n");
-	usleep(10000);
+	printf("%sexit!\n%s", YEL, NC);
+	usleep(10000);*/
+	i = 0;
+	while (i < data->number_of_philosophers)
+	{
+		pthread_join(thread_ids[i], NULL);
+		i++;
+	}
 	free(thread_ids);
 }
 

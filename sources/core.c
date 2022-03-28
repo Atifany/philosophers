@@ -27,7 +27,7 @@ long long	cur_time(t_data *data)
 	return (milliseconds);
 }
 
-void	*count_to_death(void *arg)
+/*void	*count_to_death(void *arg)
 {
 	int		left_fork;
 	int		right_fork;
@@ -62,12 +62,12 @@ void	*count_to_death(void *arg)
 		if (cur_time(data) - data->philo[my_num].last_meal >= data->time_to_die / 1000 &&
 			data->philo[my_num].feed_state[0] == 0)
 		{
-			printf("%d lols\n", my_num + 1);
+			//printf("%d lols\n", my_num + 1);
 			pthread_mutex_lock(&data->check_dead);
-			printf("%d keks\n", my_num + 1);
+			//printf("%d keks\n", my_num + 1);
 			if (data->dead)
 			{
-				printf("%d good ending\n", my_num + 1);
+				//printf("%d good ending\n", my_num + 1);
 				pthread_mutex_unlock(&data->check_dead);
 				unlock(&(data->forks[left_fork]),
 					   &(data->forks[right_fork]), &(data->philo[my_num].timer));
@@ -81,6 +81,54 @@ void	*count_to_death(void *arg)
 			return (NULL);
 		}
 		pthread_mutex_unlock(&(data->philo[my_num].timer));
+	}
+}*/
+
+void	*timer_to_die(void *arg)
+{
+	long long	last_meal_save;
+	int			left_fork;
+	int			right_fork;
+	t_point		arg_tmp;
+	t_data		*data;
+	int			my_num;
+
+	arg_tmp = (*(t_point *)arg);
+	data = arg_tmp.data;
+	my_num = arg_tmp.num + 1;
+	left_fork = my_num - 1;
+	if (my_num == data->number_of_philosophers)
+		right_fork = 0;
+	else
+		right_fork = my_num;
+	while (TRUE)
+	{
+		// this timer kinda scary
+		last_meal_save = data->philo[my_num - 1].last_meal;
+		usleep(1000);
+		while (!data->dead
+			&& cur_time(data) - data->philo[my_num - 1].last_meal < data->time_to_die / 1000
+			&& last_meal_save == data->philo[my_num - 1].last_meal)
+			usleep(1000);
+		// if eating than wait till philo finishes eating via endless loop. ahh... howdiho! pamagi!
+		if (cur_time(data) - data->philo[my_num - 1].last_meal >= data->time_to_die / 1000
+			&& last_meal_save == data->philo[my_num - 1].last_meal)
+		{
+			//pthread_mutex_lock(&(data->philo[my_num - 1].timer));
+			pthread_mutex_lock(&(data->log_queue));
+			if (!data->dead)
+				printf("%s%llu: %d is dead\nlast meal in: %llu\ntime to die is: %llu%s\n",
+					   RED, cur_time(data), my_num, data->philo[my_num - 1].last_meal,
+					   data->time_to_die / 1000, NC);
+			data->dead = TRUE;
+			pthread_mutex_unlock(&(data->log_queue));
+			unlock(&(data->forks[left_fork]),
+				   &(data->forks[right_fork]), &(data->philo[my_num - 1].timer));
+			return (NULL);
+		}
+		pthread_mutex_unlock(&(data->philo[my_num - 1].timer));
+		if (data->dead)
+			return (NULL);
 	}
 }
 
@@ -96,6 +144,7 @@ void	*philosopher(void *arg)
 	arg_tmp = (*(t_point *)arg);
 	data = arg_tmp.data;
 	my_num = arg_tmp.num + 1;
+	pthread_create(&timer, NULL, timer_to_die, arg);
 	left_fork = my_num - 1;
 	if (my_num == data->number_of_philosophers)
 		right_fork = 0;
@@ -103,15 +152,23 @@ void	*philosopher(void *arg)
 		right_fork = my_num;
 	data->philo[my_num - 1].last_meal = cur_time(data);
 	pthread_mutex_init(&data->philo[my_num - 1].timer, NULL);
-	pthread_create(&timer, NULL, count_to_death, &(t_point){my_num, data});
 	while (TRUE)
 	{
 		if (!_think(data, my_num))
+		{
+			free(arg);
 			return (NULL);
+		}
 		if (!_eat(data, my_num, left_fork, right_fork))
+		{
+			free(arg);
 			return (NULL);
+		}
 		if (!_sleep(data, my_num, left_fork, right_fork))
+		{
+			free(arg);
 			return (NULL);
+		}
 	}
 }
 
