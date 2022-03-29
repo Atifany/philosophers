@@ -122,7 +122,11 @@ int	main(int argc, char **argv)
 			"[number_of_times_each_philosopher_must_eat]\n%s", RED, NC);
 		return (0);
 	}
-	init_philo(&data, argv, argc);
+	if (!init_philo(&data, argv, argc))
+	{
+		printf("%sError%s\n", RED, NC);
+		return (0);
+	}
 	free(data.philo);
 	free(data.forks);
 	return (0);

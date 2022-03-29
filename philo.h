@@ -59,7 +59,7 @@ typedef struct s_point
 }	t_point;
 
 // Philosopher
-void		init_philo(t_data *data, char **args, int argc);
+char		init_philo(t_data *data, char **args, int argc);
 void		*philosopher(void *arg);
 
 // Philosopher actions
