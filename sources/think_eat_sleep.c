@@ -12,6 +12,18 @@
 
 #include "../philo.h"
 
+static void	count_times_eaten(t_data *data, int my_num)
+{
+	pthread_mutex_lock(&(data->log_queue));
+	data->philo[my_num - 1].times_eaten++;
+	if (data->philo[my_num - 1].times_eaten
+		== data->times_each_philosopher_must_eat)
+		data->philososphers_hungry--;
+	if (data->philososphers_hungry == 0)
+		data->dead = TRUE;
+	pthread_mutex_unlock(&(data->log_queue));
+}
+
 char	_think(t_data *data, int my_num)
 {
 	pthread_mutex_lock(&(data->log_queue));
@@ -39,20 +51,13 @@ static void	take_forks(t_data *data, int my_num, int left_fork, int right_fork)
 	pthread_mutex_lock(&(data->philo[my_num - 1].timer));
 	pthread_mutex_lock(&data->log_queue);
 	if (!data->dead)
-		printf("%s%lld: %d is eating%s\n",
-			CYN, cur_time(data), my_num, NC);
+		printf("%s%lld: %d is eating%s\n", CYN, cur_time(data), my_num, NC);
 	pthread_mutex_unlock(&(data->log_queue));
 }
 
 char	_eat(t_data *data, int my_num, int left_fork, int right_fork)
 {
 	take_forks(data, my_num, left_fork, right_fork);
-	if (data->dead)
-	{
-		unlock(&(data->forks[left_fork]),
-			&(data->forks[right_fork]), &(data->philo[my_num - 1].timer));
-		return (FALSE);
-	}
 	data->philo[my_num - 1].last_meal = cur_time(data);
 	usleep(1000);
 	while (cur_time(data)
@@ -66,13 +71,7 @@ char	_eat(t_data *data, int my_num, int left_fork, int right_fork)
 		}
 		usleep(1000);
 	}
-	pthread_mutex_lock(&(data->log_queue));
-	data->philo[my_num - 1].times_eaten++;
-	if (data->philo[my_num - 1].times_eaten == data->number_of_times_each_philosopher_must_eat)
-		data->philososphers_hungry--;
-	if (data->philososphers_hungry == 0)
-		data->dead = TRUE;
-	pthread_mutex_unlock(&(data->log_queue));
+	count_times_eaten(data, my_num);
 	return (TRUE);
 }
 

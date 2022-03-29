@@ -44,7 +44,7 @@ typedef struct s_data
 	long long		time_to_die;
 	long long		time_to_eat;
 	long long		time_to_sleep;
-	int				number_of_times_each_philosopher_must_eat;
+	int				times_each_philosopher_must_eat;
 	long long		sim_start;
 	t_philo			*philo;
 	pthread_mutex_t	*forks;
@@ -69,7 +69,6 @@ char		_sleep(t_data *data, int my_num, int left_fork, int right_fork);
 
 // Philosopher utils
 void		*timer_to_die(void *arg);
-void		*philo_life_cycle(void *arg, t_data *data, int my_num);
 long long	cur_time(t_data *data);
 void		*count_to_death(void *arg);
 

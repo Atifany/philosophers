@@ -48,7 +48,7 @@ static void	run_philosphers(t_data *data)
 		pthread_join(thread_ids[i++], NULL);
 	if (data->philososphers_hungry == 0)
 		printf("%sEach philospher has eaten at least %d times%s\n",
-			GRN, data->number_of_times_each_philosopher_must_eat, NC);
+			GRN, data->times_each_philosopher_must_eat, NC);
 	free(thread_ids);
 }
 
@@ -56,6 +56,7 @@ void	init_philo(t_data *data, char **args, int argc)
 {
 	int			i;
 
+	//add validation!!!
 	data->dead = 0;
 	data->number_of_philosophers = ft_atoi(args[1]);
 	data->philososphers_hungry = data->number_of_philosophers;
@@ -65,7 +66,7 @@ void	init_philo(t_data *data, char **args, int argc)
 	data->forks = (pthread_mutex_t *)
 		malloc(sizeof(pthread_mutex_t) * data->number_of_philosophers);
 	if (argc == 6)
-		data->number_of_times_each_philosopher_must_eat = ft_atoi(args[5]);
+		data->times_each_philosopher_must_eat = ft_atoi(args[5]);
 	data->philo = (t_philo *)
 		malloc(sizeof(t_philo) * data->number_of_philosophers);
 	i = 0;
