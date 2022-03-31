@@ -48,6 +48,8 @@ typedef struct s_data
 	long long		sim_start;
 	t_philo			*philo;
 	pthread_mutex_t	*forks;
+	pthread_mutex_t	forks_pick_up;
+	char			*forks_state;
 	pthread_mutex_t	log_queue;
 	pthread_mutex_t	get_time;
 }	t_data;
@@ -74,7 +76,8 @@ void		*count_to_death(void *arg);
 
 // Utils
 long long	ft_atoi(char *n);
-void		unlock(pthread_mutex_t *lock_1, pthread_mutex_t *lock_2, pthread_mutex_t *lock_3);
+void		unlock(pthread_mutex_t *lock_1,
+				pthread_mutex_t *lock_2, pthread_mutex_t *lock_3);
 
 // Colors
 # define RED "\e[0;31m"
