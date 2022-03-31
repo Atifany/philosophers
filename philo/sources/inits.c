@@ -34,16 +34,17 @@ static void	init_locks(t_data *data)
 
 	pthread_mutex_init(&data->get_time, NULL);
 	pthread_mutex_init(&data->log_queue, NULL);
-	pthread_mutex_init(&(data->forks_pick_up), NULL);
 	data->forks = (pthread_mutex_t *)
 		malloc(sizeof(pthread_mutex_t) * data->number_of_philosophers);
-	data->forks_state = (char *)
-		malloc(sizeof(char) * data->number_of_philosophers);
 	i = 0;
 	while (i < data->number_of_philosophers)
 	{
 		pthread_mutex_init(&(data->forks[i]), NULL);
-		data->forks_state[i] = FALSE;
+		i++;
+	}
+	i = 0;
+	while (i < data->number_of_philosophers)
+	{
 		data->philo[i].times_eaten = 0;
 		data->philo[i].last_meal = 0;
 		i++;
@@ -65,6 +66,7 @@ static void	run_philosphers(t_data *data)
 		message->data = data;
 		message->num = i;
 		pthread_create(&(thread_ids[i]), NULL, philosopher, message);
+		usleep(10);
 		i++;
 	}
 	i = 0;
@@ -73,7 +75,6 @@ static void	run_philosphers(t_data *data)
 	if (data->philososphers_hungry == 0)
 		printf("%sEach philospher has eaten at least %d times%s\n",
 			GRN, data->times_each_philosopher_must_eat, NC);
-	free(data->forks_state);
 	free(thread_ids);
 }
 

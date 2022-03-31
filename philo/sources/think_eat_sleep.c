@@ -37,40 +37,27 @@ char	_think(t_data *data, int my_num)
 
 static void	take_forks(t_data *data, int my_num, int left_fork, int right_fork)
 {
-	char	flag;
-
-	flag = FALSE;
-	while (!flag)
-	{
-		pthread_mutex_lock(&(data->forks_pick_up));
-		if (!data->forks_state[left_fork] && !data->forks_state[right_fork])
-		{
-			pthread_mutex_lock(&(data->forks[left_fork]));
-			pthread_mutex_lock(&(data->forks[right_fork]));
-			pthread_mutex_lock(&(data->philo[my_num - 1].timer));
-			pthread_mutex_lock(&(data->log_queue));
-			if (!data->dead)
-			{
-				data->forks_state[left_fork] = TRUE;
-				data->forks_state[right_fork] = TRUE;
-				printf("%s%lld: %d has taken left fork\n"
-					"%lld: %d has taken right fork%s\n",
-					CYN, cur_time(data), my_num, cur_time(data), my_num, NC);
-			}
-			flag = TRUE;
-			pthread_mutex_unlock(&(data->log_queue));
-		}
-		pthread_mutex_unlock(&(data->forks_pick_up));
-	}
+	pthread_mutex_lock(&(data->forks[left_fork]));
+	pthread_mutex_lock(&(data->log_queue));
+	if (!data->dead)
+		printf("%s%lld: %d has taken left fork%s\n",
+			CYN, cur_time(data), my_num, NC);
+	pthread_mutex_unlock(&(data->log_queue));
+	pthread_mutex_lock(&(data->forks[right_fork]));
+	if (!data->dead)
+		printf("%s%lld: %d has taken right fork%s\n",
+			CYN, cur_time(data), my_num, NC);
+	pthread_mutex_unlock(&(data->log_queue));
+	pthread_mutex_lock(&(data->philo[my_num - 1].timer));
+	pthread_mutex_lock(&data->log_queue);
+	if (!data->dead)
+		printf("%s%lld: %d is eating%s\n", CYN, cur_time(data), my_num, NC);
+	pthread_mutex_unlock(&(data->log_queue));
 }
 
 char	_eat(t_data *data, int my_num, int left_fork, int right_fork)
 {
 	take_forks(data, my_num, left_fork, right_fork);
-	pthread_mutex_lock(&data->log_queue);
-	if (!data->dead)
-		printf("%s%lld: %d is eating%s\n", CYN, cur_time(data), my_num, NC);
-	pthread_mutex_unlock(&(data->log_queue));
 	data->philo[my_num - 1].last_meal = cur_time(data);
 	usleep(1000);
 	while (cur_time(data)
@@ -78,8 +65,6 @@ char	_eat(t_data *data, int my_num, int left_fork, int right_fork)
 	{
 		if (data->dead)
 		{
-			data->forks_state[left_fork] = FALSE;
-			data->forks_state[right_fork] = FALSE;
 			unlock(&(data->forks[left_fork]),
 				&(data->forks[right_fork]), &(data->philo[my_num - 1].timer));
 			return (FALSE);
@@ -98,8 +83,6 @@ char	_sleep(t_data *data, int my_num, int left_fork, int right_fork)
 	if (!data->dead)
 		printf("%s%lld: %d is sleeping%s\n", CYN, cur_time(data), my_num, NC);
 	pthread_mutex_unlock(&data->log_queue);
-	data->forks_state[left_fork] = FALSE;
-	data->forks_state[right_fork] = FALSE;
 	unlock(&(data->forks[left_fork]),
 		&(data->forks[right_fork]), &(data->philo[my_num - 1].timer));
 	if (data->dead)
