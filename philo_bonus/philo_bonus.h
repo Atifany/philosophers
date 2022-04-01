@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   philo.h                                            :+:      :+:    :+:   */
+/*   philo_bonus.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: atifany <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/21 15:14:14 by atifany           #+#    #+#             */
-/*   Updated: 2022/03/21 15:14:16 by atifany          ###   ########.fr       */
+/*   Created: 2022/04/01 14:40:18 by atifany           #+#    #+#             */
+/*   Updated: 2022/04/01 14:40:19 by atifany          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PHILO_H
-# define PHILO_H
+#ifndef PHILO_BONUS_H
+# define PHILO_BONUS_H
 
 // Libs included
 # include <string.h>
@@ -19,7 +19,9 @@
 # include <unistd.h>
 # include <stdio.h>
 # include <pthread.h>
+# include <semaphore.h>
 # include <sys/time.h>
+# include <sys/errno.h>
 
 // General macros
 # define ULL unsigned long long
@@ -28,31 +30,28 @@
 # define TRUE 1
 # define FALSE 0
 
-// Global structure
+// Global structures
 typedef struct s_philo
 {
+	pid_t			my_pid;
 	int				times_eaten;
-	pthread_mutex_t	timer;
 	long long		last_meal;
 }	t_philo;
 
 typedef struct s_data
 {
+	int				times_each_philosopher_must_eat;
 	int				philososphers_hungry;
-	char			dead;
 	int				number_of_philosophers;
+	char			dead;
 	long long		time_to_die;
 	long long		time_to_eat;
 	long long		time_to_sleep;
-	int				times_each_philosopher_must_eat;
 	long long		sim_start;
 	t_philo			*philo;
-	pthread_mutex_t	*forks;
-	pthread_mutex_t	forks_pick_up;
-	pthread_mutex_t	log_queue;
-	pthread_mutex_t	get_time;
 }	t_data;
 
+// Data transfer structure
 typedef struct s_point
 {
 	int			num;
@@ -61,22 +60,18 @@ typedef struct s_point
 
 // Philosopher
 char		init_philo(t_data *data, char **args, int argc);
-void		*philosopher(void *arg);
 
 // Philosopher actions
-char		_think(t_data *data, int my_num);
-char		_eat(t_data *data, int my_num, int left_fork, int right_fork);
-char		_sleep(t_data *data, int my_num, int left_fork, int right_fork);
+void	_think(t_data *data, int my_num, sem_t *sem_logs, sem_t *sem_gettime);
+void	_eat(t_data *data, int my_num, sem_t *sem_forks, sem_t *sem_logs, sem_t *sem_gettime);
+void	_sleep(t_data *data, int my_num, sem_t *sem_logs, sem_t *sem_gettime);
 
 // Philosopher utils
-void		*timer_to_die(void *arg);
-long long	cur_time(t_data *data);
-void		*count_to_death(void *arg);
+void	philosopher(t_data *data, int my_num, sem_t *sem_forks, sem_t *sem_logs, sem_t *sem_gettime);
 
 // Utils
 long long	ft_atoi(char *n);
-void		unlock(pthread_mutex_t *lock_1,
-				pthread_mutex_t *lock_2, pthread_mutex_t *lock_3);
+long long	cur_time(t_data *data, sem_t *sem_gettime);
 
 // Colors
 # define RED "\e[0;31m"
