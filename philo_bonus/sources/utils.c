@@ -52,17 +52,13 @@ long long	ft_atoi(char *str)
 	return (integer);
 }
 
-long long	cur_time(t_data *data, sem_t *sem_gettime)
+long long	cur_time(t_data *data)
 {
 	struct timeval	te;
 	long long		milliseconds;
-
-	if (data)
-		sem_wait(sem_gettime);
+	
 	gettimeofday(&te, NULL);
 	milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;
-	if (data)
-		sem_post(sem_gettime);
 	if (data)
 		return (milliseconds - data->sim_start);
 	return (milliseconds);

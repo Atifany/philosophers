@@ -22,6 +22,7 @@
 # include <semaphore.h>
 # include <sys/time.h>
 # include <sys/errno.h>
+# include <signal.h>
 
 // General macros
 # define ULL unsigned long long
@@ -31,47 +32,51 @@
 # define FALSE 0
 
 // Global structures
-typedef struct s_philo
-{
-	pid_t			my_pid;
-	int				times_eaten;
-	long long		last_meal;
-}	t_philo;
-
 typedef struct s_data
 {
 	int				times_each_philosopher_must_eat;
 	int				philososphers_hungry;
 	int				number_of_philosophers;
-	char			dead;
 	long long		time_to_die;
 	long long		time_to_eat;
 	long long		time_to_sleep;
 	long long		sim_start;
-	t_philo			*philo;
 }	t_data;
 
 // Data transfer structure
-typedef struct s_point
+typedef struct s_transfer
 {
-	int			num;
-	t_data		*data;
-}	t_point;
+	int				my_num;
+	t_data			*data;
+	pthread_mutex_t	eat_lock;
+	char			is_dead;
+	union
+	{
+		struct
+		{
+			sem_t	*sem_logs;
+			sem_t	*sem_forks;
+		}	t_sems;
+		struct
+		{
+			int				times_eaten;
+			long long		last_meal;
+		}	t_philo;
+	};
+}	t_transfer;
 
 // Philosopher
-char		init_philo(t_data *data, char **args, int argc);
+void	philosopher(t_transfer *info);
+char	init_philo(t_data *data, char **args, int argc);
 
 // Philosopher actions
-void	_think(t_data *data, int my_num, sem_t *sem_logs, sem_t *sem_gettime);
-void	_eat(t_data *data, int my_num, sem_t *sem_forks, sem_t *sem_logs, sem_t *sem_gettime);
-void	_sleep(t_data *data, int my_num, sem_t *sem_logs, sem_t *sem_gettime);
-
-// Philosopher utils
-void	philosopher(t_data *data, int my_num, sem_t *sem_forks, sem_t *sem_logs, sem_t *sem_gettime);
+char	_think(t_transfer *info);
+char	_eat(t_transfer *info);
+char	_sleep(t_transfer *info);
 
 // Utils
 long long	ft_atoi(char *n);
-long long	cur_time(t_data *data, sem_t *sem_gettime);
+long long	cur_time(t_data *data);
 
 // Colors
 # define RED "\e[0;31m"
