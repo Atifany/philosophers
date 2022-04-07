@@ -43,13 +43,13 @@ static void	run_philosphers(t_data *data, t_transfer *info)
 	int		i;
 
 	id = (int *)malloc(sizeof(int) * data->number_of_philosophers);
-	info->t_sems.sem_forks = sem_open("forks", O_CREAT | O_EXCL, 0644, data->number_of_philosophers);
-	info->t_sems.sem_logs = sem_open("logs", O_CREAT | O_EXCL, 0644, 1);
+	info->sem_forks = sem_open("forks", O_CREAT | O_EXCL, 0644, data->number_of_philosophers);
+	info->sem_logs = sem_open("logs", O_CREAT | O_EXCL, 0644, 1);
 	if (errno == EEXIST)
 	{
-		destroy_sems(info->t_sems.sem_forks, info->t_sems.sem_logs);
-		info->t_sems.sem_forks = sem_open("forks", O_CREAT | O_EXCL, 0644, data->number_of_philosophers);
-		info->t_sems.sem_logs = sem_open("logs", O_CREAT | O_EXCL, 0644, 1);
+		destroy_sems(info->sem_forks, info->sem_logs);
+		info->sem_forks = sem_open("forks", O_CREAT | O_EXCL, 0644, data->number_of_philosophers);
+		info->sem_logs = sem_open("logs", O_CREAT | O_EXCL, 0644, 1);
 	}
 	my_num = 0;
 	while (my_num < data->number_of_philosophers)
@@ -68,14 +68,14 @@ static void	run_philosphers(t_data *data, t_transfer *info)
 		while (!waitpid(-1, NULL, WNOHANG | WUNTRACED));
 		i = 0;
 		while (i < data->number_of_philosophers)
-			kill(id[i++], SIGUSR1);
-		destroy_sems(info->t_sems.sem_forks, info->t_sems.sem_logs);
+			kill(id[i++], SIGKILL);
+		destroy_sems(info->sem_forks, info->sem_logs);
 	}
 	else
 	{
 		info->my_num = my_num;
 		philosopher(info);
-		printf("%s%d exited!%s\n", RED, my_num + 1, NC);
+		ft_printf("%s%d exited!%s\n", RED, my_num + 1, NC);
 	}
 	free(id);
 }

@@ -23,6 +23,7 @@
 # include <sys/time.h>
 # include <sys/errno.h>
 # include <signal.h>
+# include "../ft_printf/ft_printf.h"
 
 // General macros
 # define ULL unsigned long long
@@ -46,23 +47,17 @@ typedef struct s_data
 // Data transfer structure
 typedef struct s_transfer
 {
+	char			is_dead;
 	int				my_num;
 	t_data			*data;
 	pthread_mutex_t	eat_lock;
-	char			is_dead;
-	union
+	sem_t			*sem_logs;
+	sem_t			*sem_forks;
+	struct
 	{
-		struct
-		{
-			sem_t	*sem_logs;
-			sem_t	*sem_forks;
-		}	t_sems;
-		struct
-		{
-			int				times_eaten;
-			long long		last_meal;
-		}	t_philo;
-	};
+		int				times_eaten;
+		long long		last_meal;
+	}	t_philo;
 }	t_transfer;
 
 // Philosopher
@@ -70,9 +65,9 @@ void	philosopher(t_transfer *info);
 char	init_philo(t_data *data, char **args, int argc);
 
 // Philosopher actions
-char	_think(t_transfer *info);
-char	_eat(t_transfer *info);
-char	_sleep(t_transfer *info);
+void	_think(t_transfer *info);
+void	_eat(t_transfer *info);
+void	_sleep(t_transfer *info);
 
 // Utils
 long long	ft_atoi(char *n);

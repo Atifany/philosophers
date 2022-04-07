@@ -12,32 +12,45 @@
 
 #include "../philo_bonus.h"
 
-void	*_clock(void *arg)
+void	_clock(t_transfer *info)
 {
-	t_transfer	*info;
 	long long	last_meal_save;
 	long long	timestamp;
 
-	info = (t_transfer *)arg;
-	last_meal_save = info->t_philo.last_meal;
-	usleep(1000);
-	while (!info->is_dead
-		&& cur_time(info->data) - info->t_philo.last_meal < info->data->time_to_die
-		&& last_meal_save == info->t_philo.last_meal)
-		usleep(1000);
-	timestamp = cur_time(info->data);
-	//replace mutex with semaphore!!!!!!
-	pthread_mutex_lock(&info->eat_lock);
-	if (last_meal_save == info->t_philo.last_meal)
+	while (TRUE)
 	{
-		sem_wait(info->t_sems.sem_logs);
-		if (!info->is_dead)
-			printf("%s%llu: %d is dead\n%s", RED, timestamp, info->my_num + 1, NC);
-		info->is_dead = TRUE;
-		sem_post(info->t_sems.sem_forks);
-		sem_post(info->t_sems.sem_forks);
+		last_meal_save = info->t_philo.last_meal;
+		usleep(1000);
+		while (cur_time(info->data) - info->t_philo.last_meal < info->data->time_to_die
+			&& last_meal_save == info->t_philo.last_meal)
+			usleep(1000);
+		timestamp = cur_time(info->data);
+		//replace mutex with semaphore!!!!!!
+		pthread_mutex_lock(&info->eat_lock);
+		if (last_meal_save == info->t_philo.last_meal)
+		{
+			sem_wait(info->sem_logs);
+			ft_printf("%s%u: %d is dead\n%s", RED, timestamp, info->my_num + 1, NC);
+			info->is_dead = TRUE;
+			sem_post(info->sem_forks);
+			sem_post(info->sem_forks);
+			return ;
+		}
+		pthread_mutex_unlock(&info->eat_lock);
 	}
-	pthread_mutex_unlock(&info->eat_lock);
+}
+
+void	*philo_life_cycle(void *arg)
+{
+	t_transfer *info;
+
+	info = (t_transfer *)arg;
+	while (TRUE)
+	{
+		_think(info);
+		_eat(info);
+		_sleep(info);
+	}
 	return (NULL);
 }
 
@@ -47,16 +60,8 @@ void	philosopher(t_transfer *info)
 
 	info->is_dead = FALSE;
 	pthread_mutex_init(&(info->eat_lock), NULL);
-	pthread_create(&tid, NULL, _clock, info);
-	while (TRUE)
-	{
-		if (!_think(info))
-			break ;
-		if (!_eat(info))
-			break ;
-		if (!_sleep(info))
-			break ;
-	}
+	pthread_create(&tid, NULL, philo_life_cycle, info);
+	_clock(info);
 }
 
 int main(int argc, char **argv)
@@ -65,7 +70,7 @@ int main(int argc, char **argv)
 
 	if (argc != 5 && argc != 6)
 	{
-		printf("%sWrong number of arguments!\n"
+		ft_printf("%sWrong number of arguments!\n"
 			"Usage:\n./philo number_of_philosophers "
 			"time_to_die time_to_eat time_to_sleep "
 			"[number_of_times_each_philosopher_must_eat]\n%s", RED, NC);
@@ -73,7 +78,7 @@ int main(int argc, char **argv)
 	}
 	if (!init_philo(&data, argv, argc))
 	{
-		printf("%sError%s\n", RED, NC);
+		ft_printf("%sError%s\n", RED, NC);
 		return (0);
 	}
 	return (0);

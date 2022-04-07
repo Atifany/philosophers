@@ -1,16 +1,37 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils.c                                            :+:      :+:    :+:   */
+/*   ft_printf_utils_1_bonus.c                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: atifany <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/04/01 14:42:16 by atifany           #+#    #+#             */
-/*   Updated: 2022/04/01 14:42:17 by atifany          ###   ########.fr       */
+/*   Created: 2021/12/18 15:51:29 by atifany           #+#    #+#             */
+/*   Updated: 2021/12/18 15:51:30 by atifany          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../philo_bonus.h"
+#include "../ft_printf.h"
+
+size_t	_ft_strlen(const char *s)
+{
+	size_t	i;
+
+	if (!s)
+		return (0);
+	i = 0;
+	while (*(s++))
+		i++;
+	return (i);
+}
+
+void	_ft_bzero(void *s, size_t n)
+{
+	unsigned char	*b1;
+
+	b1 = s;
+	while (n-- > 0)
+		*b1++ = 0;
+}
 
 static int	pow(int base, int power)
 {
@@ -24,11 +45,11 @@ static int	pow(int base, int power)
 	return (base);
 }
 
-long long	ft_atoi(char *str)
+int	_ft_atoi(char *str)
 {
-	long long	i;
-	long long	integer;
-	long long	ans_len;
+	int		i;
+	int		integer;
+	int		ans_len;
 
 	i = _ft_strlen(str);
 	ans_len = 0;
@@ -40,14 +61,19 @@ long long	ft_atoi(char *str)
 	return (integer);
 }
 
-long long	cur_time(t_data *data)
+void	_ft_swap(t_formats *form, size_t *ans_len, ULL *precision)
 {
-	struct timeval	te;
-	long long		milliseconds;
-	
-	gettimeofday(&te, NULL);
-	milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;
-	if (data)
-		return (milliseconds - data->sim_start);
-	return (milliseconds);
+	size_t	temp;
+
+	if (form->is_dot == 1)
+	{
+		if (form->precision > *ans_len)
+		{
+			temp = *ans_len;
+			*ans_len = form->precision;
+			*precision = *ans_len - temp;
+		}
+		else
+			*precision = 0;
+	}
 }
