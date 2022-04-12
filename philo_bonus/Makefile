@@ -2,7 +2,7 @@
 PHILO = philo_bonus
 
 # sources
-_SRC = core.c utils.c think_eat_sleep.c inits.c
+_SRC = core.c utils_1.c utils_2.c think_eat_sleep.c inits.c
 SRC_DIR = sources
 SRC = $(_SRC:%=$(SRC_DIR)/%)
 

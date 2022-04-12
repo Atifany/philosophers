@@ -12,6 +12,19 @@
 
 #include "../philo_bonus.h"
 
+static void	am_i_dead(t_transfer *info, long long timestamp)
+{
+	sem_wait(info->dead_state);
+	sem_wait(info->sem_logs);
+	ft_printf("%s%u: %d is dead\n%s",
+		RED, timestamp, info->my_num + 1, NC);
+	info->is_dead = TRUE;
+	sem_post(info->dead_state);
+	sem_post(info->sem_forks);
+	sem_post(info->sem_forks);
+	sem_post(info->eating_state);
+}
+
 void	_clock(t_transfer *info)
 {
 	long long	last_meal_save;
@@ -21,21 +34,15 @@ void	_clock(t_transfer *info)
 	{
 		last_meal_save = info->t_philo.last_meal;
 		usleep(1000);
-		while (cur_time(info->data) - info->t_philo.last_meal < info->data->time_to_die
+		while (cur_time(info->data)
+			- info->t_philo.last_meal < info->data->time_to_die
 			&& last_meal_save == info->t_philo.last_meal)
 			usleep(1000);
 		timestamp = cur_time(info->data);
 		sem_wait(info->eating_state);
 		if (last_meal_save == info->t_philo.last_meal)
 		{
-			sem_wait(info->sem_logs);
-			sem_wait(info->dead_state);
-			ft_printf("%s%u: %d is dead\n%s", RED, timestamp, info->my_num + 1, NC);
-			info->is_dead = TRUE;
-			sem_post(info->sem_forks);
-			sem_post(info->sem_forks);
-			sem_post(info->eating_state);
-			sem_post(info->dead_state);
+			am_i_dead(info, timestamp);
 			return ;
 		}
 		sem_post(info->eating_state);
@@ -53,13 +60,14 @@ void	*philo_life_cycle(void *arg)
 	{
 		if (!_eat(info))
 			break ;
-		sem_wait(info->sem_logs);
 		if (++times_eaten == info->data->times_each_philosopher_must_eat)
 		{
-			ft_printf("%s%d: %d is full with %d\n%s", YEL, cur_time(info->data), info->my_num + 1, times_eaten, NC);
+			sem_wait(info->sem_logs);
+			ft_printf("%s%d: %d is full\n%s",
+				YEL, cur_time(info->data), info->my_num + 1, NC);
 			sem_post(info->philos_full);
+			sem_post(info->sem_logs);
 		}
-		sem_post(info->sem_logs);
 		if (!_sleep(info))
 			break ;
 	}
@@ -76,7 +84,7 @@ void	philosopher(t_transfer *info)
 	pthread_join(tid, NULL);
 }
 
-int main(int argc, char **argv)
+int	main(int argc, char **argv)
 {
 	t_data	data;
 

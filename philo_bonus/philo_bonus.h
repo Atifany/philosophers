@@ -72,8 +72,11 @@ char	_eat(t_transfer *info);
 char	_sleep(t_transfer *info);
 
 // Utils
+char		is_valid_int(char *n);
 long long	ft_atoi(char *n);
 long long	cur_time(t_data *data);
+void		destroy_sems(t_transfer *info);
+void		sem_opens(t_data *data, t_transfer *info);
 
 // Colors
 # define RED "\e[0;31m"
