@@ -25,31 +25,43 @@ void	_clock(t_transfer *info)
 			&& last_meal_save == info->t_philo.last_meal)
 			usleep(1000);
 		timestamp = cur_time(info->data);
-		//replace mutex with semaphore!!!!!!
-		pthread_mutex_lock(&info->eat_lock);
+		sem_wait(info->eating_state);
 		if (last_meal_save == info->t_philo.last_meal)
 		{
 			sem_wait(info->sem_logs);
+			sem_wait(info->dead_state);
 			ft_printf("%s%u: %d is dead\n%s", RED, timestamp, info->my_num + 1, NC);
 			info->is_dead = TRUE;
 			sem_post(info->sem_forks);
 			sem_post(info->sem_forks);
+			sem_post(info->eating_state);
+			sem_post(info->dead_state);
 			return ;
 		}
-		pthread_mutex_unlock(&info->eat_lock);
+		sem_post(info->eating_state);
 	}
 }
 
 void	*philo_life_cycle(void *arg)
 {
-	t_transfer *info;
+	t_transfer	*info;
+	long long	times_eaten;
 
+	times_eaten = 0;
 	info = (t_transfer *)arg;
 	while (TRUE)
 	{
-		_think(info);
-		_eat(info);
-		_sleep(info);
+		if (!_eat(info))
+			break ;
+		sem_wait(info->sem_logs);
+		if (++times_eaten == info->data->times_each_philosopher_must_eat)
+		{
+			ft_printf("%s%d: %d is full with %d\n%s", YEL, cur_time(info->data), info->my_num + 1, times_eaten, NC);
+			sem_post(info->philos_full);
+		}
+		sem_post(info->sem_logs);
+		if (!_sleep(info))
+			break ;
 	}
 	return (NULL);
 }
@@ -59,9 +71,9 @@ void	philosopher(t_transfer *info)
 	pthread_t	tid;
 
 	info->is_dead = FALSE;
-	pthread_mutex_init(&(info->eat_lock), NULL);
 	pthread_create(&tid, NULL, philo_life_cycle, info);
 	_clock(info);
+	pthread_join(tid, NULL);
 }
 
 int main(int argc, char **argv)

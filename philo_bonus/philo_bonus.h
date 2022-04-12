@@ -47,10 +47,13 @@ typedef struct s_data
 // Data transfer structure
 typedef struct s_transfer
 {
+	char			is_end;
 	char			is_dead;
 	int				my_num;
 	t_data			*data;
-	pthread_mutex_t	eat_lock;
+	sem_t			*philos_full;
+	sem_t			*dead_state;
+	sem_t			*eating_state;
 	sem_t			*sem_logs;
 	sem_t			*sem_forks;
 	struct
@@ -65,9 +68,8 @@ void	philosopher(t_transfer *info);
 char	init_philo(t_data *data, char **args, int argc);
 
 // Philosopher actions
-void	_think(t_transfer *info);
-void	_eat(t_transfer *info);
-void	_sleep(t_transfer *info);
+char	_eat(t_transfer *info);
+char	_sleep(t_transfer *info);
 
 // Utils
 long long	ft_atoi(char *n);
