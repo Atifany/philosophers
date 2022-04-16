@@ -19,10 +19,11 @@ static void	am_i_dead(t_transfer *info, long long timestamp)
 	ft_printf("%s%u: %d is dead\n%s",
 		RED, timestamp, info->my_num + 1, NC);
 	info->is_dead = TRUE;
-	sem_post(info->dead_state);
+	/*sem_post(info->sem_logs);
 	sem_post(info->sem_forks);
 	sem_post(info->sem_forks);
-	sem_post(info->eating_state);
+	sem_post(info->eating_state);*/
+	exit(0);
 }
 
 void	_clock(t_transfer *info)
@@ -43,7 +44,6 @@ void	_clock(t_transfer *info)
 		if (last_meal_save == info->t_philo.last_meal)
 		{
 			am_i_dead(info, timestamp);
-			return ;
 		}
 		sem_post(info->eating_state);
 	}

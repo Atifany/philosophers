@@ -66,10 +66,10 @@ static void	philo_main(int *id, int my_num, t_transfer *info)
 	{
 		info->my_num = my_num;
 		philosopher(info);
-		ft_printf("%s%d exited!%s\n", RED, my_num + 1, NC);
+		/*ft_printf("%s%d exited!%s\n", RED, my_num + 1, NC);
 		i = 0;
 		while (i++ < info->data->number_of_philosophers)
-			sem_post(info->philos_full);
+			sem_post(info->philos_full);*/
 	}
 }
 
