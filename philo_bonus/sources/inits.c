@@ -33,14 +33,11 @@ void	*wait_till_everyone_eats(void *arg)
 	while (i++ < info->data->number_of_philosophers)
 		sem_wait(info->philos_full);
 	usleep(100);
-	if (!info->is_end)
-	{
-		sem_wait(info->sem_logs);
-		ft_printf("%s%u: every philosopher has eaten at least %d times\n%s",
-			GRN, cur_time(info->data),
-			info->data->times_each_philosopher_must_eat, NC);
-	}
-	info->is_end = TRUE;
+	sem_wait(info->sem_logs);
+	ft_printf("%s%u: every philosopher has eaten at least %d times\n%s",
+		GRN, cur_time(info->data),
+		info->data->times_each_philosopher_must_eat, NC);
+	sem_post(info->end);
 	return (NULL);
 }
 
@@ -51,12 +48,12 @@ static void	philo_main(int *id, int my_num, t_transfer *info)
 
 	if (my_num == info->data->number_of_philosophers)
 	{
-		info->is_end = FALSE;
 		if (info->data->times_each_philosopher_must_eat != -1)
 			pthread_create(&tid, NULL, wait_till_everyone_eats, info);
-		while (!waitpid(-1, NULL, WNOHANG | WUNTRACED) && !info->is_end)
-			;
-		info->is_end = TRUE;
+		ft_printf("first lock\n");
+		sem_wait(info->end);
+		ft_printf("second lock\n");
+		sem_wait(info->end);
 		i = 0;
 		while (i < info->data->number_of_philosophers)
 			kill(id[i++], SIGKILL);
@@ -66,10 +63,6 @@ static void	philo_main(int *id, int my_num, t_transfer *info)
 	{
 		info->my_num = my_num;
 		philosopher(info);
-		/*ft_printf("%s%d exited!%s\n", RED, my_num + 1, NC);
-		i = 0;
-		while (i++ < info->data->number_of_philosophers)
-			sem_post(info->philos_full);*/
 	}
 }
 

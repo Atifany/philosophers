@@ -12,20 +12,6 @@
 
 #include "../philo_bonus.h"
 
-static void	am_i_dead(t_transfer *info, long long timestamp)
-{
-	sem_wait(info->dead_state);
-	sem_wait(info->sem_logs);
-	ft_printf("%s%u: %d is dead\n%s",
-		RED, timestamp, info->my_num + 1, NC);
-	info->is_dead = TRUE;
-	/*sem_post(info->sem_logs);
-	sem_post(info->sem_forks);
-	sem_post(info->sem_forks);
-	sem_post(info->eating_state);*/
-	exit(0);
-}
-
 void	_clock(t_transfer *info)
 {
 	long long	last_meal_save;
@@ -43,7 +29,13 @@ void	_clock(t_transfer *info)
 		sem_wait(info->eating_state);
 		if (last_meal_save == info->t_philo.last_meal)
 		{
-			am_i_dead(info, timestamp);
+			sem_wait(info->sem_logs);
+			ft_printf("%s%u: %d is dead\n%s",
+				RED, timestamp, info->my_num + 1, NC);
+			info->is_dead = TRUE;
+			usleep(100);
+			sem_post(info->end);
+			exit(0);
 		}
 		sem_post(info->eating_state);
 	}
@@ -58,8 +50,7 @@ void	*philo_life_cycle(void *arg)
 	info = (t_transfer *)arg;
 	while (TRUE)
 	{
-		if (!_eat(info))
-			break ;
+		_eat(info);
 		if (++times_eaten == info->data->times_each_philosopher_must_eat)
 		{
 			sem_wait(info->sem_logs);
@@ -68,8 +59,7 @@ void	*philo_life_cycle(void *arg)
 			sem_post(info->philos_full);
 			sem_post(info->sem_logs);
 		}
-		if (!_sleep(info))
-			break ;
+		_sleep(info);
 	}
 	return (NULL);
 }
@@ -78,7 +68,6 @@ void	philosopher(t_transfer *info)
 {
 	pthread_t	tid;
 
-	info->is_dead = FALSE;
 	pthread_create(&tid, NULL, philo_life_cycle, info);
 	_clock(info);
 	pthread_join(tid, NULL);

@@ -52,7 +52,7 @@ typedef struct s_transfer
 	int				my_num;
 	t_data			*data;
 	sem_t			*philos_full;
-	sem_t			*dead_state;
+	sem_t			*end;
 	sem_t			*eating_state;
 	sem_t			*sem_logs;
 	sem_t			*sem_forks;
@@ -68,8 +68,8 @@ void	philosopher(t_transfer *info);
 char	init_philo(t_data *data, char **args, int argc);
 
 // Philosopher actions
-char	_eat(t_transfer *info);
-char	_sleep(t_transfer *info);
+void	_eat(t_transfer *info);
+void	_sleep(t_transfer *info);
 
 // Utils
 char		is_valid_int(char *n);
