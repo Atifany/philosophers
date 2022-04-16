@@ -12,77 +12,35 @@
 
 #include "../philo_bonus.h"
 
-void	*wait_till_everyone_eats(void *arg)
+void	destroy_sems(t_transfer *info)
 {
-	t_transfer	*info;
-	int			i;
-
-	info = (t_transfer *)arg;
-	usleep(50000);
-	i = 0;
-	while (i++ < info->data->number_of_philosophers)
-		sem_wait(info->philos_full);
-	usleep(100);
-	sem_wait(info->sem_log);
-	ft_printf("%s%u: every philosopher has eaten at least %d times\n%s",
-		GRN, cur_time(info->data),
-		info->data->times_each_philosopher_must_eat, NC);
-	sem_post(info->sem_end);
-	return (NULL);
+	sem_unlink("forks");
+	sem_close(info->sem_forks);
+	sem_unlink("philos_full");
+	sem_close(info->philos_full);
+	sem_unlink("/log");
+	sem_close(info->sem_log);
+	sem_unlink("/eat");
+	sem_close(info->sem_eat);
+	sem_unlink("/end");
+	sem_close(info->sem_end);
 }
 
-static void	philo_main(int *id, int my_num, t_transfer *info)
+void	sem_opens(t_data *data, t_transfer *info)
 {
-	pthread_t	tid;
-	int			i;
-
-	if (my_num == info->data->number_of_philosophers)
-	{
-		if (info->data->times_each_philosopher_must_eat != -1)
-			pthread_create(&tid, NULL, wait_till_everyone_eats, info);
-		sem_wait(info->sem_end);
-		sem_wait(info->sem_end);
-		i = 0;
-		while (i < info->data->number_of_philosophers)
-			kill(id[i++], SIGKILL);
-	}
-	else
-	{
-		info->my_num = my_num;
-		philosopher(info);
-	}
-}
-
-static void	run_philosphers(t_data *data, t_transfer *info)
-{
-	int			my_num;
-	int			*id;
-
-	my_num = 0;
-	id = (int *)malloc(4 * data->number_of_philosophers);
-	destroy_sems(info);
-	sem_opens(data, info);
-	while (my_num < data->number_of_philosophers)
-	{
-		info->t_philo.last_meal = cur_time(data);
-		info->t_philo.times_eaten = 0;
-		id[my_num] = fork();
-		if (!id[my_num])
-		{
-			sem_wait(info->philos_full);
-			break ;
-		}
-		my_num++;
-		usleep(10);
-	}
-	info->data = data;
-	philo_main(id, my_num, info);
-	free(id);
+	info->sem_forks
+		= sem_open("forks", O_CREAT | O_EXCL, 7777,
+			data->number_of_philosophers);
+	info->philos_full
+		= sem_open("philos_full", O_CREAT | O_EXCL, 7777,
+			data->number_of_philosophers);
+	info->sem_log = sem_open("/log", O_CREAT | O_EXCL, 7777, 1);
+	info->sem_eat = sem_open("/eat", O_CREAT | O_EXCL, 7777, 1);
+	info->sem_end = sem_open("/end", O_CREAT | O_EXCL, 7777, 1);
 }
 
 char	init_philo(t_data *data, char **args, int argc)
 {
-	t_transfer	info;
 	int			i;
 
 	i = 1;
@@ -98,6 +56,5 @@ char	init_philo(t_data *data, char **args, int argc)
 	if (argc == 6)
 		data->times_each_philosopher_must_eat = ft_atoi(args[5]);
 	data->sim_start = cur_time(NULL);
-	run_philosphers(data, &info);
 	return (TRUE);
 }

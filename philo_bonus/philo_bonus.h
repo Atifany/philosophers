@@ -54,7 +54,7 @@ typedef struct s_transfer
 	sem_t			*sem_eat;
 	sem_t			*sem_log;
 	sem_t			*sem_forks;
-	struct
+	struct s_philo
 	{
 		int				times_eaten;
 		long long		last_meal;
@@ -62,12 +62,12 @@ typedef struct s_transfer
 }	t_transfer;
 
 // Philosopher
-void	philosopher(t_transfer *info);
-char	init_philo(t_data *data, char **args, int argc);
+void		philosopher(t_transfer *info);
+char		init_philo(t_data *data, char **args, int argc);
 
 // Philosopher actions
-void	_eat(t_transfer *info);
-void	_sleep(t_transfer *info);
+void		_eat(t_transfer *info);
+void		_sleep(t_transfer *info);
 
 // Utils
 char		is_valid_int(char *n);

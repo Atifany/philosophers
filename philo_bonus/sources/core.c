@@ -12,68 +12,76 @@
 
 #include "../philo_bonus.h"
 
-void	_clock(t_transfer *info)
-{
-	long long	last_meal_save;
-	long long	timestamp;
-
-	while (TRUE)
-	{
-		last_meal_save = info->t_philo.last_meal;
-		usleep(1000);
-		while (cur_time(info->data)
-			- info->t_philo.last_meal < info->data->time_to_die
-			&& last_meal_save == info->t_philo.last_meal)
-			usleep(1000);
-		timestamp = cur_time(info->data);
-		sem_wait(info->sem_eat);
-		if (last_meal_save == info->t_philo.last_meal)
-		{
-			sem_wait(info->sem_log);
-			ft_printf("%s%u: %d is dead\n%s",
-				RED, timestamp, info->my_num + 1, NC);
-			sem_post(info->sem_end);
-			exit(0);
-		}
-		sem_post(info->sem_eat);
-	}
-}
-
-void	*philo_life_cycle(void *arg)
+void	*wait_till_everyone_eats(void *arg)
 {
 	t_transfer	*info;
-	long long	times_eaten;
+	int			i;
 
-	times_eaten = 0;
 	info = (t_transfer *)arg;
-	while (TRUE)
-	{
-		_eat(info);
-		if (++times_eaten == info->data->times_each_philosopher_must_eat)
-		{
-			sem_wait(info->sem_log);
-			ft_printf("%s%d: %d is full\n%s",
-				YEL, cur_time(info->data), info->my_num + 1, NC);
-			sem_post(info->philos_full);
-			sem_post(info->sem_log);
-		}
-		_sleep(info);
-	}
+	usleep(50000);
+	i = 0;
+	while (i++ < info->data->number_of_philosophers)
+		sem_wait(info->philos_full);
+	usleep(100);
+	sem_wait(info->sem_log);
+	ft_printf("%s%u: every philosopher has eaten at least %d times\n%s",
+		GRN, cur_time(info->data),
+		info->data->times_each_philosopher_must_eat, NC);
+	sem_post(info->sem_end);
 	return (NULL);
 }
 
-void	philosopher(t_transfer *info)
+static void	parent_and_philos(int *id, int my_num, t_transfer *info)
 {
 	pthread_t	tid;
+	int			i;
 
-	pthread_create(&tid, NULL, philo_life_cycle, info);
-	_clock(info);
-	pthread_join(tid, NULL);
+	if (my_num == info->data->number_of_philosophers)
+	{
+		if (info->data->times_each_philosopher_must_eat != -1)
+			pthread_create(&tid, NULL, wait_till_everyone_eats, info);
+		sem_wait(info->sem_end);
+		sem_wait(info->sem_end);
+		i = 0;
+		while (i < info->data->number_of_philosophers)
+			kill(id[i++], SIGKILL);
+	}
+	else
+	{
+		sem_wait(info->philos_full);
+		info->my_num = my_num;
+		philosopher(info);
+	}
+}
+
+static void	run_philosphers(t_data *data, t_transfer *info)
+{
+	int			my_num;
+	int			*id;
+
+	my_num = 0;
+	id = (int *)malloc(4 * data->number_of_philosophers);
+	destroy_sems(info);
+	sem_opens(data, info);
+	while (my_num < data->number_of_philosophers)
+	{
+		info->t_philo.last_meal = cur_time(data);
+		info->t_philo.times_eaten = 0;
+		id[my_num] = fork();
+		if (!id[my_num])
+			break ;
+		my_num++;
+		usleep(10);
+	}
+	info->data = data;
+	parent_and_philos(id, my_num, info);
+	free(id);
 }
 
 int	main(int argc, char **argv)
 {
-	t_data	data;
+	t_transfer	info;
+	t_data		data;
 
 	if (argc != 5 && argc != 6)
 	{
@@ -84,9 +92,7 @@ int	main(int argc, char **argv)
 		return (0);
 	}
 	if (!init_philo(&data, argv, argc))
-	{
 		ft_printf("%sError%s\n", RED, NC);
-		return (0);
-	}
+	run_philosphers(&data, &info);
 	return (0);
 }
