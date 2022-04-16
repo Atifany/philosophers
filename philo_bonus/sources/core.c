@@ -26,18 +26,16 @@ void	_clock(t_transfer *info)
 			&& last_meal_save == info->t_philo.last_meal)
 			usleep(1000);
 		timestamp = cur_time(info->data);
-		sem_wait(info->eating_state);
+		sem_wait(info->sem_eat);
 		if (last_meal_save == info->t_philo.last_meal)
 		{
-			sem_wait(info->sem_logs);
+			sem_wait(info->sem_log);
 			ft_printf("%s%u: %d is dead\n%s",
 				RED, timestamp, info->my_num + 1, NC);
-			info->is_dead = TRUE;
-			usleep(100);
-			sem_post(info->end);
+			sem_post(info->sem_end);
 			exit(0);
 		}
-		sem_post(info->eating_state);
+		sem_post(info->sem_eat);
 	}
 }
 
@@ -53,11 +51,11 @@ void	*philo_life_cycle(void *arg)
 		_eat(info);
 		if (++times_eaten == info->data->times_each_philosopher_must_eat)
 		{
-			sem_wait(info->sem_logs);
+			sem_wait(info->sem_log);
 			ft_printf("%s%d: %d is full\n%s",
 				YEL, cur_time(info->data), info->my_num + 1, NC);
 			sem_post(info->philos_full);
-			sem_post(info->sem_logs);
+			sem_post(info->sem_log);
 		}
 		_sleep(info);
 	}

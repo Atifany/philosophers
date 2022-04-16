@@ -12,16 +12,6 @@
 
 #include "../philo_bonus.h"
 
-static void	init_sems(t_data *data, t_transfer *info)
-{
-	sem_opens(data, info);
-	if (errno == EEXIST)
-	{
-		destroy_sems(info);
-		sem_opens(data, info);
-	}
-}
-
 void	*wait_till_everyone_eats(void *arg)
 {
 	t_transfer	*info;
@@ -33,11 +23,11 @@ void	*wait_till_everyone_eats(void *arg)
 	while (i++ < info->data->number_of_philosophers)
 		sem_wait(info->philos_full);
 	usleep(100);
-	sem_wait(info->sem_logs);
+	sem_wait(info->sem_log);
 	ft_printf("%s%u: every philosopher has eaten at least %d times\n%s",
 		GRN, cur_time(info->data),
 		info->data->times_each_philosopher_must_eat, NC);
-	sem_post(info->end);
+	sem_post(info->sem_end);
 	return (NULL);
 }
 
@@ -50,14 +40,11 @@ static void	philo_main(int *id, int my_num, t_transfer *info)
 	{
 		if (info->data->times_each_philosopher_must_eat != -1)
 			pthread_create(&tid, NULL, wait_till_everyone_eats, info);
-		ft_printf("first lock\n");
-		sem_wait(info->end);
-		ft_printf("second lock\n");
-		sem_wait(info->end);
+		sem_wait(info->sem_end);
+		sem_wait(info->sem_end);
 		i = 0;
 		while (i < info->data->number_of_philosophers)
 			kill(id[i++], SIGKILL);
-		destroy_sems(info);
 	}
 	else
 	{
@@ -73,7 +60,8 @@ static void	run_philosphers(t_data *data, t_transfer *info)
 
 	my_num = 0;
 	id = (int *)malloc(4 * data->number_of_philosophers);
-	init_sems(data, info);
+	destroy_sems(info);
+	sem_opens(data, info);
 	while (my_num < data->number_of_philosophers)
 	{
 		info->t_philo.last_meal = cur_time(data);

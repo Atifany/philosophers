@@ -14,10 +14,10 @@
 
 static void	put_log(t_transfer *info, char *log_to_print)
 {
-	sem_wait(info->sem_logs);
+	sem_wait(info->sem_log);
 	ft_printf("%s%d: %d %s\n%s",
 		CYN, cur_time(info->data), info->my_num + 1, log_to_print, NC);
-	sem_post(info->sem_logs);
+	sem_post(info->sem_log);
 }
 
 void	_eat(t_transfer *info)
@@ -27,10 +27,10 @@ void	_eat(t_transfer *info)
 	put_log(info, "has taken a fork");
 	sem_wait(info->sem_forks);
 	put_log(info, "has taken a fork");
-	sem_wait(info->eating_state);
+	sem_wait(info->sem_eat);
 	put_log(info, "is eating");
 	info->t_philo.last_meal = cur_time(info->data);
-	sem_post(info->eating_state);
+	sem_post(info->sem_eat);
 	usleep(1000);
 	while (cur_time(info->data)
 		< info->t_philo.last_meal + info->data->time_to_eat)

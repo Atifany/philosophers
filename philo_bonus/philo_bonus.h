@@ -47,14 +47,12 @@ typedef struct s_data
 // Data transfer structure
 typedef struct s_transfer
 {
-	char			is_end;
-	char			is_dead;
 	int				my_num;
 	t_data			*data;
 	sem_t			*philos_full;
-	sem_t			*end;
-	sem_t			*eating_state;
-	sem_t			*sem_logs;
+	sem_t			*sem_end;
+	sem_t			*sem_eat;
+	sem_t			*sem_log;
 	sem_t			*sem_forks;
 	struct
 	{
