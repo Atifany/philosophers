@@ -92,7 +92,10 @@ int	main(int argc, char **argv)
 		return (0);
 	}
 	if (!init_philo(&data, argv, argc))
+	{
 		ft_printf("%sError%s\n", RED, NC);
+		return (0);
+	}	
 	run_philosphers(&data, &info);
 	return (0);
 }
