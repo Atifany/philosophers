@@ -27,7 +27,7 @@ RM = rm -f
 all: create_dirs compile_libs $(PHILO)
 
 create_dirs:
-	mkdir -p tmp_files
+	@mkdir -p tmp_files
 
 compile_libs:
 	@make bonus -C $(FT_PRINTF_DIR)

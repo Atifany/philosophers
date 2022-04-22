@@ -22,7 +22,6 @@ void	*wait_till_everyone_eats(void *arg)
 	i = 0;
 	while (i++ < info->data->number_of_philosophers)
 		sem_wait(info->philos_full);
-	usleep(100);
 	sem_wait(info->sem_log);
 	ft_printf("%s%u: every philosopher has eaten at least %d times\n%s",
 		GRN, cur_time(info->data),
@@ -86,7 +85,7 @@ int	main(int argc, char **argv)
 	if (argc != 5 && argc != 6)
 	{
 		ft_printf("%sWrong number of arguments!\n"
-			"Usage:\n./philo number_of_philosophers "
+			"Usage:\n./philo_bonus number_of_philosophers "
 			"time_to_die time_to_eat time_to_sleep "
 			"[number_of_times_each_philosopher_must_eat]\n%s", RED, NC);
 		return (0);
@@ -95,7 +94,14 @@ int	main(int argc, char **argv)
 	{
 		ft_printf("%sError%s\n", RED, NC);
 		return (0);
-	}	
+	}
+	if (data.times_each_philosopher_must_eat == 0)
+	{
+		ft_printf("%s%u: every philosopher has eaten at least %d times\n%s",
+			GRN, cur_time(&data),
+			data.times_each_philosopher_must_eat, NC);
+		return (0);
+	}
 	run_philosphers(&data, &info);
 	return (0);
 }
