@@ -2,7 +2,7 @@
 school project
 <br><br><br>
 description:
-
+This is my solution of common Philosophers task in scope of school21 project
 <br>
 todo:
 <br>
