@@ -1,7 +1,7 @@
 # philosophers
 school project
 <br><br><br>
-description:
+description:<br>
 This is my solution of common Philosophers task in scope of school21 project
 <br>
 todo:
@@ -18,3 +18,6 @@ V - add functionality to count how many times each philospher has eaten!<br>
 V -- with that said add semaphore for a number of philosophers, wich will represent<br>
 	how may philosophers has eaten, and main process will sem_wait for number_of_philosophers times.<br>
  - total fail on exit if test is smthing like 5 200 200 200. Better rewrite exit COMPLETELY!<br>
+<br>
+Note:<br>
+It appears this project does not compile on linux. Mac only.
